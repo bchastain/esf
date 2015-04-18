@@ -73,7 +73,7 @@ def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropol
     sortid = v.argsort()[::-1]
     v = v[sortid]
     d = d[:,sortid]
-
+	
     if not spatiallag:
         X = xsar
     else:
@@ -224,7 +224,9 @@ def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropol
     gammas = np.vstack((0,gammas))
     out = np.hstack((Aout,gammas))
 
-    selVec = d[:,np.array(out[1:,1].T)[0].tolist()]
+    eiglist = (np.array(out[1:,1].T)[0] - 1).tolist()
+    selVec = d[:,eiglist]
+    return out, selVec
 
 
 if __name__ == "__main__":
