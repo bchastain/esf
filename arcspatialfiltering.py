@@ -3,26 +3,32 @@ import spatialfiltering
 import time
 
 
-##data = arcpy.GetParameterAsText(0)
-##depvar = arcpy.GetParameterAsText(1)
-##indepvars = arcpy.GetParameterAsText(2)
-##nb = arcpy.GetParameterAsText(3)
-##style = arcpy.GetParameterAsText(4)
-##spatiallag = arcpy.GetParameterAsText(5)
-##zeropolicy = arcpy.GetParameterAsText(6)
-##tol = arcpy.GetParameterAsText(7)
-##zerovalue = arcpy.GetParameterAsText(8)
-##ExactEV = arcpy.GetParameterAsText(9)
-##symmetric = arcpy.GetParameterAsText(10)
-##alpha = arcpy.GetParameterAsText(11)
-##alternative = arcpy.GetParameterAsText(12)
-data = "C:\\test.gdb\\SEA"
+data = arcpy.GetParameterAsText(0)
+depvar = arcpy.GetParameterAsText(1)
+indepvars = arcpy.GetParameterAsText(2)
+indepvars = indepvars.split(";")
+nb = arcpy.GetParameterAsText(3)
+style = arcpy.GetParameterAsText(4)
+spatiallag = arcpy.GetParameterAsText(5)
+zeropolicy = arcpy.GetParameterAsText(6)
+tol = arcpy.GetParameterAsText(7)
+if tol:
+	tol = float(tol)
+zerovalue = arcpy.GetParameterAsText(8)
+if zerovalue:
+	zerovalue = float(zerovalue)
+ExactEV = arcpy.GetParameterAsText(9)
+symmetric = arcpy.GetParameterAsText(10)
+alpha = arcpy.GetParameterAsText(11)
+if alpha:
+	alpha = float(alpha)
+alternative = arcpy.GetParameterAsText(12)
+
 descDB = arcpy.Describe(data)
-descNB = arcpy.Describe("C:\\SEA.gal")
+descNB = arcpy.Describe(nb)
 
 if arcpy.env.scratchWorkspace == None:
-    #tempdir = descNB.path
-    tempdir = "C:\\tttt"
+    tempdir = descNB.path
 else:
     tempdir = arcpy.env.scratchWorkspace
 
@@ -33,7 +39,6 @@ elif descDB.dataType == "FeatureClass":
     maketempdbf = True
     arcpy.TableToDBASE_conversion([data], tempdir)
     data = tempdir + "\\" + descDB.basename + ".dbf"
-
 
 start_time = time.time()
 try:
