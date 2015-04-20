@@ -19,7 +19,7 @@ def altfunction(ZI, alternative):
     else:
         return stat.norm.cdf(ZI) #doublecheck this!
 
-def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropolicy=False, tol=0.1, zerovalue=0.0001, ExactEV=False, symmetric=True, alpha=None, alternative="two.sided",verbose=False):
+def SpatialFiltering(depvar, indepvars, spatiallagvars, data, nb, style="d", zeropolicy=False, tol=0.1, zerovalue=0.0001, ExactEV=False, symmetric=True, alpha=None, alternative="two.sided",verbose=False):
 
     if nb == "":
         raise Exception("Neighbour list argument missing")
@@ -52,9 +52,8 @@ def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropol
 
     xsar = []
     xsar.append([1] * nofreg)
-    if not spatiallag:
-        for indep in indepvars:
-            xsar.append(db.by_col(indep))
+    for indep in indepvars:
+        xsar.append(db.by_col(indep))
     xsar = np.matrix(xsar).T
     if(np.count_nonzero(np.isnan(xsar)) > 0):
         raise Exception("NAs in independent variable(s)")
@@ -73,13 +72,13 @@ def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropol
     sortid = v.argsort()[::-1]
     v = v[sortid]
     d = d[:,sortid]
-	
-    if not spatiallag:
+
+    if len(spatiallagvars) == 0:
         X = xsar
     else:
         X = xsar
-        for indep in indepvars:
-            X = np.hstack((X,np.matrix(db.by_col(indep)).T))
+        for lag in spatiallagvars:
+            X = np.hstack((X,np.matrix(db.by_col(lag)).T))
         
         
     y.shape = (y.shape[0], 1)
@@ -141,7 +140,7 @@ def SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style="d", zeropol
     #Compute and save coefficients for all eigenvectors 
     onlysar = False
     # if (missing(xlag) & !missing(xsar))
-    if not spatiallag:
+    if len(spatiallagvars) == 0:
         onlysar = True
         Xcoeffs = LA.solve((np.transpose(X) * X),(np.transpose(X) * y))
         gamma4eigenvec = np.vstack((np.r_[1:nofreg+1],np.zeros(nofreg))).T
@@ -246,9 +245,9 @@ if __name__ == "__main__":
 ##    verbose = True
     depvar = "LOGB_WM_P2"
     indepvars = ["LOGPOPDEN", "LOGL_WM_P1"]
-    spatiallag = False
-    nb = "C:\\usr\\SEA.GAL"
-    data = "C:\\usr\\SEA.DBF"
+    spatiallag = []
+    nb = "C:\\SEA.GAL"
+    data = "C:\\SEA.DBF"
     style = "v"
     zeropolicy = False
     tol = 0.1

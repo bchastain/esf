@@ -8,13 +8,10 @@ data = arcpy.GetParameterAsText(0)
 depvar = arcpy.GetParameterAsText(1)
 indepvars = arcpy.GetParameterAsText(2)
 indepvars = indepvars.split(";")
-nb = arcpy.GetParameterAsText(3)
-style = arcpy.GetParameterAsText(4)
-spatiallag = arcpy.GetParameterAsText(5)
-if spatiallag == "true":
-	spatiallag = True
-else:
-	spatiallag = False
+spatiallag = arcpy.GetParameterAsText(3)
+spatiallag = spatiallag.split(";")
+nb = arcpy.GetParameterAsText(4)
+style = arcpy.GetParameterAsText(5)
 zeropolicy = arcpy.GetParameterAsText(6)
 if zeropolicy == "true":
 	zeropolicy = True
