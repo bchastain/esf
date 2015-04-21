@@ -61,7 +61,7 @@ elif descDB.dataType == "FeatureClass":
 
 start_time = time.time()
 try:
-	out, selVec = spatialfiltering.SpatialFiltering(depvar, indepvars, spatiallag, data, nb, style, zeropolicy, tol, zerovalue, ExactEV, symmetric, alpha, alternative)
+	out, selVec = spatialfiltering.spatialfiltering(depvar, indepvars, spatiallag, data, nb, style, zeropolicy, tol, zerovalue, ExactEV, symmetric, alpha, alternative)
 	np.set_printoptions(precision=4, suppress=True)
 	arcpy.AddMessage("    Step     SelEvec  Eval     MinMi    ZMinMi   Pr(ZI)   R2     tgamma")
 	arcpy.AddMessage(np.array_str(np.array(out)))
