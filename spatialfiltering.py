@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+"""Python Eigenvector Spatial Filtering
+This module provides a port of the SpatialFiltering function from the
+R spdep library, written by Michael Tiefelsdorf, Yongwan Chun and
+Roger Bivand ((c) 2005) and distributed  under the terms of the GNU
+General Public License, version 2.
+
+References:
+    Roger Bivand, Gianfranco Piras (2015). Comparing Implementations of
+    Estimation Methods for Spatial Econometrics. Journal of Statistical
+    Software, 63(18), 1-36. URL http://www.jstatsoft.org/v63/i18/.
+
+    Bivand, R. S., Hauke, J., and Kossowski, T. (2013). Computing the
+    Jacobian in Gaussian spatial autoregressive models: An illustrated
+    comparison of available methods. Geographical Analysis, 45(2),
+    150-179.
+
+    Tiefelsdorf M, Griffith DA. (2007) Semiparametric Filtering of
+    Spatial Autocorrelation: The Eigenvector Approach. Environment and
+    Planning A, 39 (5) 1193 - 1221. http://www.spatialfiltering.com
+"""
+
+__author__ = "Bryan Chastain <chastain@utdallas.edu>"
+
 import math
 
 import scipy.stats as stat
@@ -5,7 +29,8 @@ import numpy as np
 import numpy.linalg as LA
 import pysal
 
-def getmoranstat(MSM, degfree):
+def _getmoranstat(MSM, degfree):
+    #Internal function for calculating Moran's I, given MSM matrix and d.f.
     t1 = np.sum(np.diag(MSM))
     t2 = np.sum(np.diag(MSM * MSM))
     E = t1 / degfree
@@ -13,7 +38,8 @@ def getmoranstat(MSM, degfree):
     return E, V
 
 
-def altfunction(ZI, alternative):
+def _altfunction(ZI, alternative):
+    #Internal function for returning p-value based on user-selected tail(s)
     if(alternative == "two.sided"):
         return 2 * (1 - stat.norm.cdf(abs(ZI)))
     elif(alternative == "greater"):
@@ -37,6 +63,35 @@ def spatialfiltering(
         alpha=None,
         alternative="two.sided",
         verbose=False):
+    """This function uses the Tiefelsdorf & Griffith (2007) method for
+    performing a semi-parametric spatial filtering approach for removing
+    spatial dependence from linear models. A brute-force selection
+    method is employed for finding eigenvectors that reduce the Moran's
+    I value for regression residuals the most, and it continues until
+    no remaining candidate eigenvectors can reduce the value by more
+    than "tol". The function returns a summary table of the selection
+    process as well as a matrix of the final selected eigenvectors.
+
+    Args:
+        depvar (str):
+        indepvars (list of str):
+        spatiallagvars (list of str):
+        data (str):
+        nb (str):
+        style (str):
+        zeropolicy (bool):
+        tol (float):
+        zerovalue (float):
+        ExactEV (bool):
+        symmetric (bool):
+        alpha (float):
+        alternative (str):
+        verbose (bool):
+
+    Returns:
+        A tuple comprised of a summary table of the selection process
+        as well as a matrix of the final selected eigenvectors.
+    """
 
     if nb == "":
         raise Exception("Neighbour list argument missing")
@@ -116,7 +171,7 @@ def spatialfiltering(
     M = (np.identity(nofreg) - X *
          LA.solve((np.transpose(X) * X), np.transpose(X)))
     MSM = M * S * M
-    E, V = getmoranstat(MSM, degfree)
+    E, V = _getmoranstat(MSM, degfree)
 
     y = np.matrix(y)
     # Matrix storing the iteration history:
@@ -134,7 +189,7 @@ def spatialfiltering(
     IthisTime = cyMSMy / cyMy
     zIthisTime = (IthisTime - E) / math.sqrt(V)
 
-    PrI = altfunction(zIthisTime, alternative)
+    PrI = _altfunction(zIthisTime, alternative)
 
     Aout = np.matrix([0, 0, 0, IthisTime, zIthisTime, PrI, 1 - (cyMy/TSS)])
     if verbose:
@@ -202,7 +257,7 @@ def spatialfiltering(
                          LA.solve(np.transpose(xe) * xe, np.transpose(xe)))
                     degfree = nofreg - xe.shape[1]
                     MSM = M * S * M
-                    E, V = getmoranstat(MSM, degfree)
+                    E, V = _getmoranstat(MSM, degfree)
 
                 if(abs((mi - E) / math.sqrt(V)) < z):  # Identify min z(Moran)
                     MinMi = mi
@@ -219,14 +274,14 @@ def spatialfiltering(
                  LA.solve(np.transpose(X) * X, np.transpose(X)))
             degfree = nofreg - X.shape[1]
             MSM = M * S * M
-            E, V = getmoranstat(MSM, degfree)
+            E, V = _getmoranstat(MSM, degfree)
             ZMinMi = ((MinMi - E) / math.sqrt(V))
             out = [i + 1,
                    idx,
                    v[idx - 1],
                    MinMi[0, 0],
                    ZMinMi[0, 0],
-                   altfunction(ZMinMi, alternative)[0, 0],
+                   _altfunction(ZMinMi, alternative)[0, 0],
                    (1 - ((np.transpose(y) * M) * y / TSS))]
             if verbose:
                 print("Step", out[0], "SelEvec", out[1], "MinMi", out[3],
@@ -245,7 +300,7 @@ def spatialfiltering(
                         print out
                     break
             else:
-                if(altfunction(ZMinMi, alternative) >= alpha):
+                if(_altfunction(ZMinMi, alternative) >= alpha):
                     break
 
             if not ExactEV:
