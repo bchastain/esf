@@ -15,91 +15,113 @@ import spatialfiltering
 
 # Get parameters from ArcGIS tool
 data = arcpy.GetParameterAsText(0)
-depvar = arcpy.GetParameterAsText(1)
-indepvars = arcpy.GetParameterAsText(2)
-indepvars = indepvars.split(";")
-spatiallag = arcpy.GetParameterAsText(3)
-spatiallag = spatiallag.split(";")
-nb = arcpy.GetParameterAsText(4)
+
+dependent_var = arcpy.GetParameterAsText(1)
+
+independent_vars = arcpy.GetParameterAsText(2)
+independent_vars = independent_vars.split(";")
+
+spatial_lag = arcpy.GetParameterAsText(3)
+spatial_lag = spatial_lag.split(";")
+
+neighbor_list = arcpy.GetParameterAsText(4)
+
 style = arcpy.GetParameterAsText(5)
-zeropolicy = arcpy.GetParameterAsText(6)
-if zeropolicy == "true":
-    zeropolicy = True
+
+zero_policy = arcpy.GetParameterAsText(6)
+if zero_policy == "true":
+    zero_policy = True
 else:
-    zeropolicy = False
-tol = arcpy.GetParameterAsText(7)
-if tol:
-    tol = float(tol)
-zerovalue = arcpy.GetParameterAsText(8)
-if zerovalue:
-    zerovalue = float(zerovalue)
-ExactEV = arcpy.GetParameterAsText(9)
-if ExactEV == "true":
-    ExactEV = True
+    zero_policy = False
+
+tolerance = arcpy.GetParameterAsText(7)
+if tolerance:
+    tolerance = float(tolerance)
+
+zero_value = arcpy.GetParameterAsText(8)
+if zero_value:
+    zero_value = float(zero_value)
+
+exact_EV = arcpy.GetParameterAsText(9)
+if exact_EV == "true":
+    exact_EV = True
 else:
-    ExactEV = False
+    exact_EV = False
+
 symmetric = arcpy.GetParameterAsText(10)
 if symmetric == "true":
     symmetric = True
 else:
     symmetric = False
+
 alpha = arcpy.GetParameterAsText(11)
 if alpha:
     alpha = float(alpha)
 else:
     alpha = None
+
 alternative = arcpy.GetParameterAsText(12)
 
-outtable = arcpy.GetParameterAsText(13)
+out_table = arcpy.GetParameterAsText(13)
 
 
 descDB = arcpy.Describe(data)
-descNB = arcpy.Describe(nb)
+descNB = arcpy.Describe(neighbor_list)
 
+# If there is no user-defined scratch workspace, use the neighbor file
+# directory.
 if arcpy.env.scratchWorkspace is None:
     tempdir = descNB.path
 else:
     tempdir = arcpy.env.scratchWorkspace
 
-maketempdbf = False
+make_temp_dbf = False
+# If the input file is a shapefile, then just swap the file extension.
 if descDB.dataType == "ShapeFile":
     data = data.replace(".shp", ".dbf")
 elif descDB.dataType == "FeatureClass":
-    maketempdbf = True
+    # If it is a feature class, a temporary DBF file will need to be created.
+    make_temp_dbf = True
     arcpy.TableToDBASE_conversion([data], tempdir)
     data = tempdir + "\\" + descDB.basename + ".dbf"
 
 start_time = time.time()
 try:
     out, selVec = spatialfiltering.spatialfiltering(
-        depvar,
-        indepvars,
-        spatiallag,
+        dependent_var,
+        independent_vars,
+        spatial_lag,
         data,
-        nb,
+        neighbor_list,
         style,
-        zeropolicy,
-        tol,
-        zerovalue,
-        ExactEV,
+        zero_policy,
+        tolerance,
+        zero_value,
+        exact_EV,
         symmetric,
         alpha,
         alternative
     )
+    # Print summary table header.
     np.set_printoptions(precision=4, suppress=True)
     hdr = "    Step     SelEvec  Eval     MinMi"
     hdr += "    ZMinMi   Pr(ZI)   R2     tgamma"
     arcpy.AddMessage(hdr)
+    # Print summary table.
     arcpy.AddMessage(np.array_str(np.array(out)))
+
+    # Extract selected eigenvector IDs
     cols = np.array(out[1:, 1]).astype(np.string_).T[0].tolist()
+    # Prefix with a "V" for use as field labels.
     cols = ["V" + s for s in cols]
+    # Set up a numpy dtype with field names and float types
     dts = {'names': cols, 'formats': [np.float32]*len(cols)}
+    # Assembled a structured array with eigenvectors and dtype.
     array = np.rec.fromrecords(selVec.tolist(), dtype=dts)
-    arcpy.da.NumPyArrayToTable(array, outtable)
+    # Save this as a new ArcGIS-readable table.
+    arcpy.da.NumPyArrayToTable(array, out_table)
 except Exception as e:
     arcpy.AddError(e.message)
-    print e.message
 arcpy.AddMessage("--- %s seconds ---" % (time.time() - start_time))
-print("--- %s seconds ---" % (time.time() - start_time))
-if maketempdbf:
+if make_temp_dbf:
     arcpy.Delete_management(data)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Python Eigenvector Spatial Filtering
 This module provides a port of the SpatialFiltering function from the
 R spdep library, written by Michael Tiefelsdorf, Yongwan Chun and
@@ -29,17 +28,18 @@ import numpy as np
 import numpy.linalg as LA
 import pysal
 
+
 def _getmoranstat(MSM, degfree):
-    #Internal function for calculating Moran's I, given MSM matrix and d.f.
+    # Internal function for calculating Moran's I, given MSM matrix and d.f.
     t1 = np.sum(np.diag(MSM))
     t2 = np.sum(np.diag(MSM * MSM))
-    E = t1 / degfree
-    V = 2 * (degfree*t2 - t1*t1) / (degfree * degfree * (degfree+2))
-    return E, V
+    expected = t1 / degfree
+    variance = 2 * (degfree*t2 - t1*t1) / (degfree * degfree * (degfree+2))
+    return expected, variance
 
 
 def _altfunction(ZI, alternative):
-    #Internal function for returning p-value based on user-selected tail(s)
+    # Internal function for returning p-value based on user-selected tail(s)
     if(alternative == "two.sided"):
         return 2 * (1 - stat.norm.cdf(abs(ZI)))
     elif(alternative == "greater"):
@@ -49,16 +49,16 @@ def _altfunction(ZI, alternative):
 
 
 def spatialfiltering(
-        depvar,
-        indepvars,
-        spatiallagvars,
+        dependent_var,
+        independent_vars,
+        spatial_lag_vars,
         data,
-        nb,
+        neighbor_list,
         style="d",
-        zeropolicy=False,
-        tol=0.1,
-        zerovalue=0.0001,
-        ExactEV=False,
+        zero_policy=False,
+        tolerance=0.1,
+        zero_value=0.0001,
+        exact_EV=False,
         symmetric=True,
         alpha=None,
         alternative="two.sided",
@@ -69,98 +69,133 @@ def spatialfiltering(
     method is employed for finding eigenvectors that reduce the Moran's
     I value for regression residuals the most, and it continues until
     no remaining candidate eigenvectors can reduce the value by more
-    than "tol". The function returns a summary table of the selection
+    than "tolerance". The function returns a summary table of the selection
     process as well as a matrix of the final selected eigenvectors.
 
     Args:
-        depvar (str):
-        indepvars (list of str):
-        spatiallagvars (list of str):
-        data (str):
-        nb (str):
-        style (str):
-        zeropolicy (bool):
-        tol (float):
-        zerovalue (float):
-        ExactEV (bool):
-        symmetric (bool):
-        alpha (float):
-        alternative (str):
-        verbose (bool):
+        dependent_var (str): Name of the response variable column in dataset
+        independent_vars (list of str): Names of indep. variable columns
+        spatial_lag_vars (list of str): Names of lagged variabled columns
+        data (str): Filename of dataset (.dbf)
+        neighbor_list (str): Filename of neighbor list file (.gal)
+        style (str): Style of spatial weights coding to be used -
+            r=row-standardized, d=double standardized, b=binary,
+            v=variance stabilized
+        zero_policy (bool): If False, stop with error for any empty neighbor
+            sets, if True permit the weights list to be formed with zero-
+            length weights vectors
+        tolerance (float): Tolerance value for convergence of spatial filtering
+        zero_value (float): Eigenvectors with eigenvalues of an absolute value
+            smaller than zero_value will be excluded in eigenvector search
+        exact_EV (bool): Set exact_EV=True to use exact expectations and
+            variances rather than the expectation and variance of Moran's I
+            from the previous iteration
+        symmetric (bool): If True, spatial weights matrix forced to symmetry
+        alpha (float): If not None, used instead of the tolerance argument as a
+            stopping rule to choose all eigenvectors up to and including the
+            one with a probability value exceeding alpha.
+        alternative (str): String for specifying alternative hypothesis -
+            "greater", "less" or "two.sided"
+        verbose (bool): If True, reports update on eigenvector selection
+            during the brute-force search.
 
     Returns:
         A tuple comprised of a summary table of the selection process
         as well as a matrix of the final selected eigenvectors.
+
+        The summary table includes the following columns:
+            Step: Step counter of the selection procedure
+            SelEvec: number of selected eigenvector (sorted descending)
+            Eval: its associated eigenvalue
+            MinMi: value Moran's I for residual autocorrelation
+            ZMinMi: standardized value of Moran's I assuming a normal
+                approximation
+            pr(ZI): probability value of the permutation-based standardized
+                deviate for the given value of the alternative argument
+            R2: R^2 of the model including exogenous variables and eigenvectors
+            gamma: regression coefficient of selected eigenvector in fit
     """
 
-    if nb == "":
+    if neighbor_list == "":
         raise Exception("Neighbour list argument missing")
-    if depvar == "":
+    if dependent_var == "":
         raise Exception("Missing dependent variable")
-    if len(indepvars) == 0:
+    if len(independent_vars) == 0:
         raise Exception("Missing independent variable(s)")
 
-    # supplement given neighbors list with spatial weights for given coding
+    # Supplement given neighbors list with spatial weights for given coding
     # scheme (r=row-standardized, d=double standardized, b=binary, v=variance
-    # stabilized)
-    w = pysal.open(nb).read()
+    # stabilized).
+    w = pysal.open(neighbor_list).read()
     w.transform = style
 
+    # Return the full numpy array of the weights matrix.
     S, ids = pysal.full(w)
 
-    # if symmetric=true, constructs a weights list object corresponding to the
-    # sparse matrix 1/2 (W + W')
+    # If symmetric=true, constructs a weights list object corresponding to the
+    # sparse matrix 1/2 (W + W').
     if symmetric:
         S = 0.5 * (S + S.T)
 
     S = w.s0 / S.shape[0] * S
 
-    nofreg = S.shape[0]  # number of observations
+    # number of observations
+    nofreg = S.shape[0]
 
-    # Generate Eigenvectors if eigen vectors are not given
-    # (M1 for no SAR, MX for SAR)
-
+    # Open the data file and store the dependent variable as a numpy array.
     db = pysal.open(data, 'r')
-    y = np.array(db.by_col(depvar))
+    y = np.array(db.by_col(dependent_var))
+    # Check for missing values.
     if(np.count_nonzero(np.isnan(y)) > 0):
         raise Exception("NAs in dependent variable")
 
     xsar = []
+    # Add intercept.
     xsar.append([1] * nofreg)
-    for indep in indepvars:
+    # Add data for each independent variable.
+    for indep in independent_vars:
         xsar.append(db.by_col(indep))
     xsar = np.matrix(xsar).T
+    # Check for missing values.
     if(np.count_nonzero(np.isnan(xsar)) > 0):
         raise Exception("NAs in independent variable(s)")
 
+    # Ensure data and spatial weights have the same dimensions.
     if(xsar.shape[0] != S.shape[0]):
         raise Exception(
             "Input data and neighbourhood list have different dimensions")
 
+    # Construct the MSM matrix.
     q, r = LA.qr(np.transpose(xsar) * xsar)
     p = np.dot(q.T, np.transpose(xsar))
     qrsolve = np.dot(LA.inv(r), p)
     mx = np.identity(nofreg) - xsar*qrsolve
     S = mx * S * mx
 
-    # Get EigenVectors and EigenValues
+    # Calculate eigenvectors (v) and eigenvalues (d).
     v, d = LA.eig(S)
+
+    # Sort eigenvalues - this is not necessary, but is included here in order
+    # to compare results with R, which provides sorted eigenvalues by default.
+    # For increased performance, the following 3 lines may be commented out.
     sortid = v.argsort()[::-1]
     v = v[sortid]
     d = d[:, sortid]
 
-    if len(spatiallagvars) == 0:
+    # If not using spatial lag variables, just use independent variables
+    if len(spatial_lag_vars) == 0:
         X = xsar
     else:
+        # If using lagged variables, add them in now.
         X = xsar
-        for lag in spatiallagvars:
+        for lag in spatial_lag_vars:
             X = np.hstack((X, np.matrix(db.by_col(lag)).T))
 
     y.shape = (y.shape[0], 1)
-	coll_test = pysal.spreg.OLS(np.array(y), np.array(X[:, 1:]))
+    coll_test = pysal.spreg.OLS(np.array(y), np.array(X[:, 1:]))
+    # Check for collinearity.
     if(np.count_nonzero(np.isnan(coll_test.betas)) > 0):
         raise Exception("Collinear RHS variable detected")
-    # X will be augmented by the selected eigenvectors
 
     # Total sum of squares for R2
     TSS = np.sum(np.asarray(y - np.mean(y))**2)
@@ -198,13 +233,13 @@ def spatialfiltering(
     # Define search eigenvalue range
     # The search range is restricted into a sign range based on Moran's I
     # Put a sign for eigenvectors associated with their eigenvalues
-    # if val > zerovalue (e.g. if val > 0.0001), then 1
-    # if val < zerovalue (e.g. if val < -0.0001), then -1
+    # if val > zero_value (e.g. if val > 0.0001), then 1
+    # if val < zero_value (e.g. if val < -0.0001), then -1
     # otherwise 0
 
     sel = np.vstack((np.r_[1:nofreg + 1], v, np.zeros(nofreg))).T
-    sel[:, 2] = ((v > abs(zerovalue)).astype(int) -
-                 (v < -abs(zerovalue)).astype(int))
+    sel[:, 2] = ((v > abs(zero_value)).astype(int) -
+                 (v < -abs(zero_value)).astype(int))
 
     # Compute the Moran's I of the aspatial model (without any eigenvector)
     # i.e., the sign of autocorrelation
@@ -219,7 +254,7 @@ def spatialfiltering(
     # Compute and save coefficients for all eigenvectors
     onlysar = False
     # if (missing(xlag) & !missing(xsar))
-    if len(spatiallagvars) == 0:
+    if len(spatial_lag_vars) == 0:
         onlysar = True
         Xcoeffs = LA.solve((np.transpose(X) * X), (np.transpose(X) * y))
         gamma4eigenvec = np.vstack((np.r_[1:nofreg + 1], np.zeros(nofreg))).T
@@ -232,7 +267,7 @@ def spatialfiltering(
 
     # Here the actual search starts - The inner loop check each candidate -
     # The outer loop selects eigenvectors until the residual autocorrelation
-    # falls below 'tol'
+    # falls below 'tolerance'
     # Loop over all eigenvectors with positive or negative eigenvalue
     oldZMinMi = float("inf")
     for i in range(0, nofreg):  # Outer Loop
@@ -251,7 +286,7 @@ def spatialfiltering(
                 mi = (((np.transpose(res) * S) * res) /
                       (np.transpose(res) * res))
 
-                if ExactEV:
+                if exact_EV:
                     ident = np.identity(nofreg)
                     M = (ident - xe *
                          LA.solve(np.transpose(xe) * xe, np.transpose(xe)))
@@ -289,26 +324,26 @@ def spatialfiltering(
             Aout = np.vstack((Aout, out))
             sel[idx - 1, 2] = 0
             if not alpha:
-                if(abs(ZMinMi) < tol):
+                if(abs(ZMinMi) < tolerance):
                     break
                 elif(abs(ZMinMi) > abs(oldZMinMi)):
-                    if not ExactEV:
+                    if not exact_EV:
                         out = "An inversion has been detected. The procedure "
                         out += "will terminate now.\nIt is suggested to use "
                         out += "the exact expectation and variance of Moran's "
-                        out += "I\nby setting the option ExactEV to TRUE.\n"
+                        out += "I\nby setting the option exact_EV to TRUE.\n"
                         print out
                     break
             else:
                 if(_altfunction(ZMinMi, alternative) >= alpha):
                     break
 
-            if not ExactEV:
+            if not exact_EV:
                 if (abs(ZMinMi) > abs(oldZMinMi)):
                     out = "An inversion has been detected. The procedure "
                     out += "will terminate now.\nIt is suggested to use "
                     out += "the exact expectation and variance of Moran's "
-                    out += "I\nby setting the option ExactEV to TRUE.\n"
+                    out += "I\nby setting the option exact_EV to TRUE.\n"
                     print out
                     break
 
@@ -326,32 +361,33 @@ def spatialfiltering(
 
 
 if __name__ == "__main__":
-    depvar = "LOGB_WM_P2"
-    indepvars = ["LOGPOPDEN", "LOGL_WM_P1"]
+    dependent_var = "LOGB_WM_P2"
+    independent_vars = ["LOGPOPDEN", "LOGL_WM_P1"]
     spatiallag = []
-    nb = "C:\\SEA.GAL"
+    neighbor_list = "C:\\SEA.GAL"
     data = "C:\\SEA.DBF"
     style = "v"
-    zeropolicy = False
-    tol = 0.1
-    zerovalue = 0.0001
-    ExactEV = False
+    zero_policy = False
+    tolerance = 0.1
+    zero_value = 0.0001
+    exact_EV = False
     symmetric = True
     alpha = None
     alternative = "two.sided"
     verbose = True
     spatialfiltering(
-        depvar,
-        indepvars,
+        dependent_var,
+        independent_vars,
         spatiallag,
         data,
-        nb,
+        neighbor_list,
         style,
-        zeropolicy,
-        tol,
-        zerovalue,
-        ExactEV,
+        zero_policy,
+        tolerance,
+        zero_value,
+        exact_EV,
         symmetric,
         alpha,
         alternative,
-        verbose)
+        verbose
+    )
