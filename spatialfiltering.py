@@ -49,19 +49,10 @@ def _altfunction(ZI, alternative):
 
 
 def spatialfiltering(
-        dependent_var,
-        independent_vars,
-        spatial_lag_vars,
-        data,
-        neighbor_list,
-        style="d",
-        zero_policy=False,
-        tolerance=0.1,
-        zero_value=0.0001,
-        exact_EV=False,
-        symmetric=True,
-        alpha=None,
-        alternative="two.sided",
+        dependent_var, independent_vars, spatial_lag_vars,
+        data, neighbor_list, style="d", zero_policy=False,
+        tolerance=0.1, zero_value=0.0001, exact_EV=False,
+        symmetric=True, alpha=None, alternative="two.sided",
         verbose=False):
     """This function uses the Tiefelsdorf & Griffith (2007) method for
     performing a semi-parametric spatial filtering approach for removing
@@ -120,7 +111,7 @@ def spatialfiltering(
         raise Exception("Neighbour list argument missing")
     if dependent_var == "":
         raise Exception("Missing dependent variable")
-    if len(independent_vars) == 0:
+    if (len(independent_vars) == 0 and len(spatial_lag_vars) == 0):
         raise Exception("Missing independent variable(s)")
 
     # Supplement given neighbors list with spatial weights for given coding
@@ -362,8 +353,8 @@ def spatialfiltering(
 
 if __name__ == "__main__":
     dependent_var = "LOGB_WM_P2"
-    independent_vars = ["LOGPOPDEN", "LOGL_WM_P1"]
-    spatiallag = []
+    independent_vars = None
+    spatiallag = None
     neighbor_list = "C:\\SEA.GAL"
     data = "C:\\SEA.DBF"
     style = "v"
@@ -376,18 +367,7 @@ if __name__ == "__main__":
     alternative = "two.sided"
     verbose = True
     spatialfiltering(
-        dependent_var,
-        independent_vars,
-        spatiallag,
-        data,
-        neighbor_list,
-        style,
-        zero_policy,
-        tolerance,
-        zero_value,
-        exact_EV,
-        symmetric,
-        alpha,
-        alternative,
-        verbose
+        dependent_var, independent_vars, spatiallag, data,
+        neighbor_list, style, zero_policy, tolerance, zero_value,
+        exact_EV, symmetric, alpha, alternative, verbose
     )

@@ -15,14 +15,21 @@ import spatialfiltering
 
 # Get parameters from ArcGIS tool
 data = arcpy.GetParameterAsText(0)
+orig_data = data
 
 dependent_var = arcpy.GetParameterAsText(1)
 
 independent_vars = arcpy.GetParameterAsText(2)
-independent_vars = independent_vars.split(";")
+if independent_vars == "":
+    independent_vars = []
+else:
+    independent_vars = independent_vars.split(";")
 
 spatial_lag = arcpy.GetParameterAsText(3)
-spatial_lag = spatial_lag.split(";")
+if spatial_lag == "":
+    spatial_lag = []
+else:
+    spatial_lag = spatial_lag.split(";")
 
 neighbor_list = arcpy.GetParameterAsText(4)
 
@@ -62,9 +69,6 @@ else:
 
 alternative = arcpy.GetParameterAsText(12)
 
-out_table = arcpy.GetParameterAsText(13)
-
-
 descDB = arcpy.Describe(data)
 descNB = arcpy.Describe(neighbor_list)
 
@@ -88,22 +92,12 @@ elif descDB.dataType == "FeatureClass":
 start_time = time.time()
 try:
     out, selVec = spatialfiltering.spatialfiltering(
-        dependent_var,
-        independent_vars,
-        spatial_lag,
-        data,
-        neighbor_list,
-        style,
-        zero_policy,
-        tolerance,
-        zero_value,
-        exact_EV,
-        symmetric,
-        alpha,
-        alternative
+        dependent_var, independent_vars, spatial_lag,
+        data, neighbor_list, style, zero_policy, tolerance,
+        zero_value, exact_EV, symmetric, alpha, alternative
     )
     # Print summary table header.
-    np.set_printoptions(precision=4, suppress=True)
+    np.set_printoptions(precision=3, suppress=True)
     hdr = "    Step     SelEvec  Eval     MinMi"
     hdr += "    ZMinMi   Pr(ZI)   R2     tgamma"
     arcpy.AddMessage(hdr)
@@ -111,15 +105,20 @@ try:
     arcpy.AddMessage(np.array_str(np.array(out)))
 
     # Extract selected eigenvector IDs
-    cols = np.array(out[1:, 1]).astype(np.string_).T[0].tolist()
+    cols = np.array(out[1:, 1]).astype(np.int).T[0].tolist()
     # Prefix with a "V" for use as field labels.
-    cols = ["V" + s for s in cols]
+    cols = ["V" + str(s) for s in cols]
+    formats = [np.float32]*len(cols)
+    cols.insert(0, "ID")
+    formats.insert(0, np.int)
     # Set up a numpy dtype with field names and float types
-    dts = {'names': cols, 'formats': [np.float32]*len(cols)}
+    dts = {'names': cols, 'formats': formats}
+    # Add an incremental ID field for joining.
+    selVec = np.hstack((np.matrix(np.arange(selVec.shape[0])).T, selVec))
     # Assembled a structured array with eigenvectors and dtype.
     array = np.rec.fromrecords(selVec.tolist(), dtype=dts)
-    # Save this as a new ArcGIS-readable table.
-    arcpy.da.NumPyArrayToTable(array, out_table)
+    # Append the selected vectors to the input table.
+    arcpy.da.ExtendTable(orig_data,descDB.OIDFieldName,array,"ID")
 except Exception as e:
     arcpy.AddError(e.message)
 arcpy.AddMessage("--- %s seconds ---" % (time.time() - start_time))
