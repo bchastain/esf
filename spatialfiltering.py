@@ -138,7 +138,7 @@ def spatialfiltering(
 
     >>> import numpy as np
     >>> import pysal
-    >>> import spatialfiltering
+    >>> from esf.spatialfiltering import spatialfiltering
     >>> neighbor_list = pysal.examples.get_path("columbus.gal")
     >>> data = pysal.examples.get_path("columbus.dbf")
     >>> dependent_var = "CRIME"
@@ -153,7 +153,7 @@ def spatialfiltering(
     >>> alpha = None
     >>> alternative = "two.sided"
     >>> verbose = False
-    >>> out, selVec = spatialfiltering.spatialfiltering(
+    >>> out, selVec = spatialfiltering(
     >>>     dependent_var, independent_vars, spatiallag, data,
     >>>     neighbor_list, style, zero_policy, tolerance, zero_value,
     >>>     exact_EV, symmetric, alpha, alternative, verbose
