@@ -105,6 +105,43 @@ def spatialfiltering(
                 deviate for the given value of the alternative argument
             R2: R^2 of the model including exogenous variables and eigenvectors
             gamma: regression coefficient of selected eigenvector in fit
+
+    Examples:
+        >>> import numpy as np
+        >>> import pysal
+        >>> import spatialfiltering
+        >>> neighbor_list = pysal.examples.get_path("columbus.gal")
+        >>> data = pysal.examples.get_path("columbus.dbf")
+        >>> dependent_var = "CRIME"
+        >>> independent_vars = ["INC", "HOVAL"]
+        >>> spatiallag = None
+        >>> style = "r"
+        >>> zero_policy = False
+        >>> tolerance = 0.1
+        >>> zero_value = 0.0001
+        >>> exact_EV = True
+        >>> symmetric = True
+        >>> alpha = None
+        >>> alternative = "two.sided"
+        >>> verbose = False
+        >>> out, selVec = spatialfiltering.spatialfiltering(
+        >>>     dependent_var, independent_vars, spatiallag, data,
+        >>>     neighbor_list, style, zero_policy, tolerance, zero_value,
+        >>>     exact_EV, symmetric, alpha, alternative, verbose
+        >>> )
+        >>> np.set_printoptions(precision=3, suppress=True)
+        >>> hdr = "    Step    SelEvec Eval    MinMi"
+        >>> hdr += "   ZMinMi  Pr(ZI)  R2     tgamma"
+        >>> print hdr
+        >>> print np.array_str(np.array(out))
+            Step    SelEvec Eval    MinMi   ZMinMi  Pr(ZI)  R2     tgamma
+        [[  0.      0.      0.      0.222   2.839   0.005   0.552   0.   ]
+         [  1.      5.      0.706   0.126   1.971   0.049   0.627 -31.624]
+         [  2.      3.      0.84    0.058   1.485   0.138   0.659  20.777]
+         [  3.      1.      1.004  -0.021   0.906   0.365   0.685  18.88 ]
+         [  4.     10.      0.341  -0.073   0.395   0.693   0.725 -22.972]
+         [  5.     14.      0.188  -0.116  -0.045   0.964   0.764 -22.941]]
+
     """
 
     if neighbor_list == "":
