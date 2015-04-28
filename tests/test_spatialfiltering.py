@@ -3,7 +3,7 @@ import unittest
 import pysal
 import numpy as np
 
-import spatialfiltering
+from esf.spatialfiltering import spatialfiltering
 
 
 class TestSpatialfiltering(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestSpatialfiltering(unittest.TestCase):
         alpha = None
         alternative = "two.sided"
         verbose = False
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -41,7 +41,7 @@ class TestSpatialfiltering(unittest.TestCase):
                          [5, 3, 1, 10, 14])
 
         style = "v"
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -51,7 +51,7 @@ class TestSpatialfiltering(unittest.TestCase):
                          [4, 5, 1, 10, 14, 2, 11, 12, 16, 3])
 
         style = "b"
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -61,7 +61,7 @@ class TestSpatialfiltering(unittest.TestCase):
                          [4, 3, 1, 12, 2, 11, 9, 16, 10, 5, 13, 17, 18])
 
         tolerance = 0.5
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -73,7 +73,7 @@ class TestSpatialfiltering(unittest.TestCase):
         style = "r"
         tolerance = 0.1
         zero_value = 0.5
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -84,7 +84,7 @@ class TestSpatialfiltering(unittest.TestCase):
 
         zero_value = 0.0001
         alpha = 0.5
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -94,7 +94,7 @@ class TestSpatialfiltering(unittest.TestCase):
                          [5, 3, 1, 10])
 
         exact_EV = False
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -105,7 +105,7 @@ class TestSpatialfiltering(unittest.TestCase):
 
         exact_EV = True
         alternative = "greater"
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -115,7 +115,7 @@ class TestSpatialfiltering(unittest.TestCase):
                          [5, 3, 1, 10, 14])
 
         alternative = "less"
-        out, selVec = spatialfiltering.spatialfiltering(
+        out, selVec = spatialfiltering(
             dependent_var, independent_vars, spatiallag, data,
             neighbor_list, style, zero_policy, tolerance, zero_value,
             exact_EV, symmetric, alpha, alternative, verbose
@@ -123,6 +123,20 @@ class TestSpatialfiltering(unittest.TestCase):
         # Try using a less-than alternative hypothesis.
         self.assertEqual(np.array(out[1:, 1]).astype(np.int).T[0].tolist(),
                          [5])
+
+
+        alternative = "two.sided"
+        alpha = None
+        independent_vars = []
+        spatiallag = ["INC", "HOVAL"]
+        out, selVec = spatialfiltering(
+            dependent_var, independent_vars, spatiallag, data,
+            neighbor_list, style, zero_policy, tolerance, zero_value,
+            exact_EV, symmetric, alpha, alternative, verbose
+        )
+        # Try using spatial lag model instead of SAR
+        self.assertEqual(np.array(out[1:, 1]).astype(np.int).T[0].tolist(),
+                         [6, 4, 1, 17, 5, 16, 15, 11, 19, 18])
 
 if __name__ == '__main__':
     unittest.main()
