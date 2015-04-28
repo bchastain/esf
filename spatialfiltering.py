@@ -4,19 +4,21 @@ R spdep library, written by Michael Tiefelsdorf, Yongwan Chun and
 Roger Bivand ((c) 2005) and distributed  under the terms of the GNU
 General Public License, version 2.
 
-References:
-    Roger Bivand, Gianfranco Piras (2015). Comparing Implementations of
-    Estimation Methods for Spatial Econometrics. Journal of Statistical
-    Software, 63(18), 1-36. URL http://www.jstatsoft.org/v63/i18/.
+References
+----------
+Roger Bivand, Gianfranco Piras (2015). Comparing Implementations of
+Estimation Methods for Spatial Econometrics. Journal of Statistical
+Software, 63(18), 1-36. URL http://www.jstatsoft.org/v63/i18/.
 
-    Bivand, R. S., Hauke, J., and Kossowski, T. (2013). Computing the
-    Jacobian in Gaussian spatial autoregressive models: An illustrated
-    comparison of available methods. Geographical Analysis, 45(2),
-    150-179.
+Bivand, R. S., Hauke, J., and Kossowski, T. (2013). Computing the
+Jacobian in Gaussian spatial autoregressive models: An illustrated
+comparison of available methods. Geographical Analysis, 45(2),
+150-179.
 
-    Tiefelsdorf M, Griffith DA. (2007) Semiparametric Filtering of
-    Spatial Autocorrelation: The Eigenvector Approach. Environment and
-    Planning A, 39 (5) 1193 - 1221. http://www.spatialfiltering.com
+Tiefelsdorf M, Griffith DA. (2007) Semiparametric Filtering of
+Spatial Autocorrelation: The Eigenvector Approach. Environment and
+Planning A, 39 (5) 1193 - 1221. http://www.spatialfiltering.com
+
 """
 
 __author__ = "Bryan Chastain <chastain@utdallas.edu>"
@@ -63,84 +65,111 @@ def spatialfiltering(
     than "tolerance". The function returns a summary table of the selection
     process as well as a matrix of the final selected eigenvectors.
 
-    Args:
-        dependent_var (str): Name of the response variable column in dataset
-        independent_vars (list of str): Names of indep. variable columns
-        spatial_lag_vars (list of str): Names of lagged variabled columns
-        data (str): Filename of dataset (.dbf)
-        neighbor_list (str): Filename of neighbor list file (.gal)
-        style (str): Style of spatial weights coding to be used -
-            r=row-standardized, d=double standardized, b=binary,
-            v=variance stabilized
-        zero_policy (bool): If False, stop with error for any empty neighbor
-            sets, if True permit the weights list to be formed with zero-
-            length weights vectors
-        tolerance (float): Tolerance value for convergence of spatial filtering
-        zero_value (float): Eigenvectors with eigenvalues of an absolute value
-            smaller than zero_value will be excluded in eigenvector search
-        exact_EV (bool): Set exact_EV=True to use exact expectations and
-            variances rather than the expectation and variance of Moran's I
-            from the previous iteration
-        symmetric (bool): If True, spatial weights matrix forced to symmetry
-        alpha (float): If not None, used instead of the tolerance argument as a
-            stopping rule to choose all eigenvectors up to and including the
-            one with a probability value exceeding alpha.
-        alternative (str): String for specifying alternative hypothesis -
-            "greater", "less" or "two.sided"
-        verbose (bool): If True, reports update on eigenvector selection
-            during the brute-force search.
+    Parameters
+    ----------
+    dependent_var : str
+        Name of the response variable column in dataset
+    independent_vars : list of str
+        Names of indep. variable columns
+    spatial_lag_vars : list of str
+            Names of lagged variabled columns
+    data : str
+        Filename of dataset (.dbf)
+    neighbor_list : str
+        Filename of neighbor list file (.gal)
+    style : str
+        Style of spatial weights coding to be used - r=row-standardized,
+        d=double standardized, b=binary, v=variance stabilized
+    zero_policy : bool
+        If False, stop with error for any empty neighbor sets, if True
+        permit the weights list to be formed with zero-length weights vectors
+    tolerance : float
+            Tolerance value for convergence of spatial filtering
+    zero_value : float
+        Eigenvectors with eigenvalues of an absolute value smaller than
+        zero_value will be excluded in eigenvector search
+    exact_EV : bool
+        Set exact_EV=True to use exact expectations and variances rather than
+        the expectation and variance of Moran's I from the previous iteration
+    symmetric : bool
+        If True, spatial weights matrix forced to symmetry
+    alpha : float
+        If not None, used instead of the tolerance argument as a stopping
+        rule to choose all eigenvectors up to and including the one with a
+        probability value exceeding alpha.
+    alternative : str
+        String for specifying alternative hypothesis - "greater", "less" or
+        "two.sided"
+    verbose : bool
+        If True, reports update on eigenvector selection during the
+        brute-force search.
 
-    Returns:
-        A tuple comprised of a summary table of the selection process
-        as well as a matrix of the final selected eigenvectors.
-
+    Returns
+    -------
+    out, selVec : tuple of numpy.matrix
+        A tuple comprised of a numpy matrix summary table of the selection
+        process as well as a numpy matrix of the final selected eigenvectors.
         The summary table includes the following columns:
-            Step: Step counter of the selection procedure
-            SelEvec: number of selected eigenvector (sorted descending)
-            Eval: its associated eigenvalue
-            MinMi: value Moran's I for residual autocorrelation
-            ZMinMi: standardized value of Moran's I assuming a normal
-                approximation
-            pr(ZI): probability value of the permutation-based standardized
-                deviate for the given value of the alternative argument
-            R2: R^2 of the model including exogenous variables and eigenvectors
-            gamma: regression coefficient of selected eigenvector in fit
 
-    Examples:
-        >>> import numpy as np
-        >>> import pysal
-        >>> import spatialfiltering
-        >>> neighbor_list = pysal.examples.get_path("columbus.gal")
-        >>> data = pysal.examples.get_path("columbus.dbf")
-        >>> dependent_var = "CRIME"
-        >>> independent_vars = ["INC", "HOVAL"]
-        >>> spatiallag = None
-        >>> style = "r"
-        >>> zero_policy = False
-        >>> tolerance = 0.1
-        >>> zero_value = 0.0001
-        >>> exact_EV = True
-        >>> symmetric = True
-        >>> alpha = None
-        >>> alternative = "two.sided"
-        >>> verbose = False
-        >>> out, selVec = spatialfiltering.spatialfiltering(
-        >>>     dependent_var, independent_vars, spatiallag, data,
-        >>>     neighbor_list, style, zero_policy, tolerance, zero_value,
-        >>>     exact_EV, symmetric, alpha, alternative, verbose
-        >>> )
-        >>> np.set_printoptions(precision=3, suppress=True)
-        >>> hdr = "    Step    SelEvec Eval    MinMi"
-        >>> hdr += "   ZMinMi  Pr(ZI)  R2     tgamma"
-        >>> print hdr
-        >>> print np.array_str(np.array(out))
-            Step    SelEvec Eval    MinMi   ZMinMi  Pr(ZI)  R2     tgamma
-        [[  0.      0.      0.      0.222   2.839   0.005   0.552   0.   ]
-         [  1.      5.      0.706   0.126   1.971   0.049   0.627 -31.624]
-         [  2.      3.      0.84    0.058   1.485   0.138   0.659  20.777]
-         [  3.      1.      1.004  -0.021   0.906   0.365   0.685  18.88 ]
-         [  4.     10.      0.341  -0.073   0.395   0.693   0.725 -22.972]
-         [  5.     14.      0.188  -0.116  -0.045   0.964   0.764 -22.941]]
+        Step: Step counter of the selection procedure
+
+        SelEvec: number of selected eigenvector (sorted descending)
+
+        Eval: its associated eigenvalue
+
+        MinMi: value Moran's I for residual autocorrelation
+
+        ZMinMi: standardized value of Moran's I assuming a normal
+        approximation
+
+        pr(ZI): probability value of the permutation-based
+        standardized deviate for the given value of the alternative
+        argument
+
+        R2: R^2 of the model including exogenous variables and
+        eigenvectors
+
+        gamma: regression coefficient of selected eigenvector in
+        fit
+
+    Examples
+    --------
+    From the R SpatialFiltering example:
+
+    >>> import numpy as np
+    >>> import pysal
+    >>> import spatialfiltering
+    >>> neighbor_list = pysal.examples.get_path("columbus.gal")
+    >>> data = pysal.examples.get_path("columbus.dbf")
+    >>> dependent_var = "CRIME"
+    >>> independent_vars = ["INC", "HOVAL"]
+    >>> spatiallag = None
+    >>> style = "r"
+    >>> zero_policy = False
+    >>> tolerance = 0.1
+    >>> zero_value = 0.0001
+    >>> exact_EV = True
+    >>> symmetric = True
+    >>> alpha = None
+    >>> alternative = "two.sided"
+    >>> verbose = False
+    >>> out, selVec = spatialfiltering.spatialfiltering(
+    >>>     dependent_var, independent_vars, spatiallag, data,
+    >>>     neighbor_list, style, zero_policy, tolerance, zero_value,
+    >>>     exact_EV, symmetric, alpha, alternative, verbose
+    >>> )
+    >>> np.set_printoptions(precision=3, suppress=True)
+    >>> hdr = "    Step    SelEvec Eval    MinMi"
+    >>> hdr += "   ZMinMi  Pr(ZI)  R2     tgamma"
+    >>> print hdr
+    >>> print np.array_str(np.array(out))
+        Step    SelEvec Eval    MinMi   ZMinMi  Pr(ZI)  R2     tgamma
+    [[  0.      0.      0.      0.222   2.839   0.005   0.552   0.   ]
+     [  1.      5.      0.706   0.126   1.971   0.049   0.627 -31.624]
+     [  2.      3.      0.84    0.058   1.485   0.138   0.659  20.777]
+     [  3.      1.      1.004  -0.021   0.906   0.365   0.685  18.88 ]
+     [  4.     10.      0.341  -0.073   0.395   0.693   0.725 -22.972]
+     [  5.     14.      0.188  -0.116  -0.045   0.964   0.764 -22.941]]
 
     """
 
