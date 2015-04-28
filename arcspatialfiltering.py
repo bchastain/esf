@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ArcGIS Eigenvector Spatial Filtering
 This module provides an interface for ArcGIS to call the Eigenvector
 Spatial Filtering function, spatialfiltering().

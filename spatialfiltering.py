@@ -170,11 +170,11 @@ def spatialfiltering(
     # to compare results with R, which provides sorted eigenvalues by default.
     # For increased performance, the following 3 lines may be commented out.
     sortid = v.argsort()[::-1]
-    v = v[sortid]
-    d = d[:, sortid]
+    v = np.real(v[sortid])
+    d = np.real(d[:, sortid])
 
     # If not using spatial lag variables, just use independent variables
-    if len(spatial_lag_vars) == 0:
+    if(spatial_lag_vars is None or len(spatial_lag_vars) == 0):
         X = xsar
     else:
         # If using lagged variables, add them in now.
@@ -231,7 +231,6 @@ def spatialfiltering(
     sel = np.vstack((np.r_[1:nofreg + 1], v, np.zeros(nofreg))).T
     sel[:, 2] = ((v > abs(zero_value)).astype(int) -
                  (v < -abs(zero_value)).astype(int))
-
     # Compute the Moran's I of the aspatial model (without any eigenvector)
     # i.e., the sign of autocorrelation
     # if MI is positive, then acsign = 1
@@ -245,7 +244,7 @@ def spatialfiltering(
     # Compute and save coefficients for all eigenvectors
     onlysar = False
     # if (missing(xlag) & !missing(xsar))
-    if len(spatial_lag_vars) == 0:
+    if(spatial_lag_vars is None or len(spatial_lag_vars) == 0):
         onlysar = True
         Xcoeffs = LA.solve((np.transpose(X) * X), (np.transpose(X) * y))
         gamma4eigenvec = np.vstack((np.r_[1:nofreg + 1], np.zeros(nofreg))).T
@@ -285,7 +284,8 @@ def spatialfiltering(
                     MSM = M * S * M
                     E, V = _getmoranstat(MSM, degfree)
 
-                if(abs((mi - E) / math.sqrt(V)) < z):  # Identify min z(Moran)
+                # Identify min z(Moran)
+                if(abs((mi - E) / math.sqrt(V)) < z):
                     MinMi = mi
                     z = (MinMi - E) / math.sqrt(V)
                     idx = j + 1
@@ -349,25 +349,3 @@ def spatialfiltering(
     eiglist = (np.array(out[1:, 1].T)[0] - 1).tolist()
     selVec = d[:, eiglist]
     return out, selVec
-
-
-if __name__ == "__main__":
-    dependent_var = "LOGB_WM_P2"
-    independent_vars = None
-    spatiallag = None
-    neighbor_list = "C:\\SEA.GAL"
-    data = "C:\\SEA.DBF"
-    style = "v"
-    zero_policy = False
-    tolerance = 0.1
-    zero_value = 0.0001
-    exact_EV = False
-    symmetric = True
-    alpha = None
-    alternative = "two.sided"
-    verbose = True
-    spatialfiltering(
-        dependent_var, independent_vars, spatiallag, data,
-        neighbor_list, style, zero_policy, tolerance, zero_value,
-        exact_EV, symmetric, alpha, alternative, verbose
-    )
