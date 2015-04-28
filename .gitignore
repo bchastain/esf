@@ -43,3 +43,6 @@ Temporary Items
 .apdisk
 *.pyc
 *.pyc
+*.bat
+*.doctree
+*.pickle

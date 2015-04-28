@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>esf.spatialfiltering — Eigenvector Spatial Filtering &mdash; Eigenvector Spatial Filtering 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Eigenvector Spatial Filtering 0.1 documentation" href="index.html"/>
+        <link rel="prev" title="esf — Eigenvector Spatial Filtering" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> Eigenvector Spatial Filtering</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">esf.spatialfiltering</span></code> &#8212; Eigenvector Spatial Filtering</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Eigenvector Spatial Filtering</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">esf.spatialfiltering</span></code> &#8212; Eigenvector Spatial Filtering</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/spatialfiltering.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="esf-spatialfiltering-eigenvector-spatial-filtering">
+<h1><code class="xref py py-mod docutils literal"><span class="pre">esf.spatialfiltering</span></code> &#8212; Eigenvector Spatial Filtering<a class="headerlink" href="#esf-spatialfiltering-eigenvector-spatial-filtering" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="xref py py-mod docutils literal"><span class="pre">esf.spatialfiltering</span></code> module provides semi-parametric
+eigenvector spatial filtering.</p>
+<span class="target" id="module-spatialfiltering"></span><p>Python Eigenvector Spatial Filtering
+This module provides a port of the SpatialFiltering function from the
+R spdep library, written by Michael Tiefelsdorf, Yongwan Chun and
+Roger Bivand ((c) 2005) and distributed  under the terms of the GNU
+General Public License, version 2.</p>
+<p class="rubric">References</p>
+<p>Roger Bivand, Gianfranco Piras (2015). Comparing Implementations of
+Estimation Methods for Spatial Econometrics. Journal of Statistical
+Software, 63(18), 1-36. URL <a class="reference external" href="http://www.jstatsoft.org/v63/i18/">http://www.jstatsoft.org/v63/i18/</a>.</p>
+<p>Bivand, R. S., Hauke, J., and Kossowski, T. (2013). Computing the
+Jacobian in Gaussian spatial autoregressive models: An illustrated
+comparison of available methods. Geographical Analysis, 45(2),
+150-179.</p>
+<p>Tiefelsdorf M, Griffith DA. (2007) Semiparametric Filtering of
+Spatial Autocorrelation: The Eigenvector Approach. Environment and
+Planning A, 39 (5) 1193 - 1221. <a class="reference external" href="http://www.spatialfiltering.com">http://www.spatialfiltering.com</a></p>
+<dl class="function">
+<dt id="spatialfiltering.spatialfiltering">
+<code class="descclassname">spatialfiltering.</code><code class="descname">spatialfiltering</code><span class="sig-paren">(</span><em>dependent_var</em>, <em>independent_vars</em>, <em>spatial_lag_vars</em>, <em>data</em>, <em>neighbor_list</em>, <em>style='d'</em>, <em>zero_policy=False</em>, <em>tolerance=0.1</em>, <em>zero_value=0.0001</em>, <em>exact_EV=False</em>, <em>symmetric=True</em>, <em>alpha=None</em>, <em>alternative='two.sided'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#spatialfiltering.spatialfiltering" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function uses the Tiefelsdorf &amp; Griffith (2007) method for
+performing a semi-parametric spatial filtering approach for removing
+spatial dependence from linear models. A brute-force selection
+method is employed for finding eigenvectors that reduce the Moran&#8217;s
+I value for regression residuals the most, and it continues until
+no remaining candidate eigenvectors can reduce the value by more
+than &#8220;tolerance&#8221;. The function returns a summary table of the selection
+process as well as a matrix of the final selected eigenvectors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dependent_var</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of the response variable column in dataset</li>
+<li><strong>independent_vars</strong> (<em>list of str</em>) &#8211; Names of indep. variable columns</li>
+<li><strong>spatial_lag_vars</strong> (<em>list of str</em>) &#8211; Names of lagged variabled columns</li>
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename of dataset (.dbf)</li>
+<li><strong>neighbor_list</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename of neighbor list file (.gal)</li>
+<li><strong>style</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Style of spatial weights coding to be used - r=row-standardized,
+d=double standardized, b=binary, v=variance stabilized</li>
+<li><strong>zero_policy</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If False, stop with error for any empty neighbor sets, if True
+permit the weights list to be formed with zero-length weights vectors</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Tolerance value for convergence of spatial filtering</li>
+<li><strong>zero_value</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Eigenvectors with eigenvalues of an absolute value smaller than
+zero_value will be excluded in eigenvector search</li>
+<li><strong>exact_EV</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Set exact_EV=True to use exact expectations and variances rather than
+the expectation and variance of Moran&#8217;s I from the previous iteration</li>
+<li><strong>symmetric</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, spatial weights matrix forced to symmetry</li>
+<li><strong>alpha</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; If not None, used instead of the tolerance argument as a stopping
+rule to choose all eigenvectors up to and including the one with a
+probability value exceeding alpha.</li>
+<li><strong>alternative</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; String for specifying alternative hypothesis - &#8220;greater&#8221;, &#8220;less&#8221; or
+&#8220;two.sided&#8221;</li>
+<li><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, reports update on eigenvector selection during the
+brute-force search.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p><strong>out, selVec</strong> &#8211;
+A tuple comprised of a numpy matrix summary table of the selection
+process as well as a numpy matrix of the final selected eigenvectors.
+The summary table includes the following columns:</p>
+<p>Step: Step counter of the selection procedure</p>
+<p>SelEvec: number of selected eigenvector (sorted descending)</p>
+<p>Eval: its associated eigenvalue</p>
+<p>MinMi: value Moran&#8217;s I for residual autocorrelation</p>
+<p>ZMinMi: standardized value of Moran&#8217;s I assuming a normal
+approximation</p>
+<p>pr(ZI): probability value of the permutation-based
+standardized deviate for the given value of the alternative
+argument</p>
+<p>R2: R^2 of the model including exogenous variables and
+eigenvectors</p>
+<p>gamma: regression coefficient of selected eigenvector in
+fit</p>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple of numpy.matrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>From the R SpatialFiltering example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pysal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">esf.spatialfiltering</span> <span class="kn">import</span> <span class="n">spatialfiltering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neighbor_list</span> <span class="o">=</span> <span class="n">pysal</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="s">&quot;columbus.gal&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">pysal</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="s">&quot;columbus.dbf&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dependent_var</span> <span class="o">=</span> <span class="s">&quot;CRIME&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">independent_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;INC&quot;</span><span class="p">,</span> <span class="s">&quot;HOVAL&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spatiallag</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">style</span> <span class="o">=</span> <span class="s">&quot;r&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zero_policy</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tolerance</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zero_value</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exact_EV</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">symmetric</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alternative</span> <span class="o">=</span> <span class="s">&quot;two.sided&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">verbose</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="p">,</span> <span class="n">selVec</span> <span class="o">=</span> <span class="n">spatialfiltering</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">dependent_var</span><span class="p">,</span> <span class="n">independent_vars</span><span class="p">,</span> <span class="n">spatiallag</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">neighbor_list</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">zero_policy</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">zero_value</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">exact_EV</span><span class="p">,</span> <span class="n">symmetric</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alternative</span><span class="p">,</span> <span class="n">verbose</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hdr</span> <span class="o">=</span> <span class="s">&quot;    Step    SelEvec Eval    MinMi&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hdr</span> <span class="o">+=</span> <span class="s">&quot;   ZMinMi  Pr(ZI)  R2     tgamma&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">hdr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">array_str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+<span class="go">    Step    SelEvec Eval    MinMi   ZMinMi  Pr(ZI)  R2     tgamma</span>
+<span class="go">[[  0.      0.      0.      0.222   2.839   0.005   0.552   0.   ]</span>
+<span class="go"> [  1.      5.      0.706   0.126   1.971   0.049   0.627 -31.624]</span>
+<span class="go"> [  2.      3.      0.84    0.058   1.485   0.138   0.659  20.777]</span>
+<span class="go"> [  3.      1.      1.004  -0.021   0.906   0.365   0.685  18.88 ]</span>
+<span class="go"> [  4.     10.      0.341  -0.073   0.395   0.693   0.725 -22.972]</span>
+<span class="go"> [  5.     14.      0.188  -0.116  -0.045   0.964   0.764 -22.941]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="esf — Eigenvector Spatial Filtering"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Bryan Chastain.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
