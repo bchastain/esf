@@ -32,11 +32,13 @@ __author__ = "Bryan Chastain <chastain@utdallas.edu>"
 
 
 def _getmoranstat(MSM, degfree):
-    # Internal function for calculating Moran's I, given MSM matrix and d.f.
-    t1 = np.sum(np.diag(MSM))
-    t2 = np.sum(np.diag(MSM * MSM))
-    expected = t1 / degfree
-    variance = 2 * (degfree*t2 - t1*t1) / (degfree * degfree * (degfree+2))
+    # Internal function for calculating Moran's I expected value and variance,
+    # given MSM matrix and d.f.
+    trace_MSM = np.sum(np.diag(MSM))
+    trace_MSM2 = np.sum(np.diag(MSM * MSM))
+    expected = trace_MSM / degfree
+    variance = (2 * (degfree*trace_MSM2 - trace_MSM*trace_MSM) /
+                (degfree * degfree * (degfree+2)))
     return expected, variance
 
 
