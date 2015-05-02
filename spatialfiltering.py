@@ -21,14 +21,14 @@ Planning A, 39 (5) 1193 - 1221. http://www.spatialfiltering.com
 
 """
 
-__author__ = "Bryan Chastain <chastain@utdallas.edu>"
-
 import math
 
 import scipy.stats as stat
 import numpy as np
 import numpy.linalg as LA
 import pysal
+
+__author__ = "Bryan Chastain <chastain@utdallas.edu>"
 
 
 def _getmoranstat(MSM, degfree):
@@ -42,10 +42,10 @@ def _getmoranstat(MSM, degfree):
 
 def _altfunction(ZI, alternative):
     # Internal function for returning p-value based on user-selected tail(s)
-    if(alternative == "two.sided"):
+    if alternative == "two.sided":
         return 2 * (1 - stat.norm.cdf(abs(ZI)))
-    elif(alternative == "greater"):
-        return (1 - stat.norm.cdf(ZI))
+    elif alternative == "greater":
+        return 1 - stat.norm.cdf(ZI)
     else:
         return stat.norm.cdf(ZI)
 
@@ -177,7 +177,7 @@ def spatialfiltering(
         raise Exception("Neighbour list argument missing")
     if dependent_var == "":
         raise Exception("Missing dependent variable")
-    if (len(independent_vars) == 0 and len(spatial_lag_vars) == 0):
+    if len(independent_vars) == 0 and len(spatial_lag_vars) == 0:
         raise Exception("Missing independent variable(s)")
 
     # Supplement given neighbors list with spatial weights for given coding
@@ -203,7 +203,7 @@ def spatialfiltering(
     db = pysal.open(data, 'r')
     y = np.array(db.by_col(dependent_var))
     # Check for missing values.
-    if(np.count_nonzero(np.isnan(y)) > 0):
+    if np.count_nonzero(np.isnan(y)) > 0:
         raise Exception("NAs in dependent variable")
 
     xsar = []
@@ -214,11 +214,11 @@ def spatialfiltering(
         xsar.append(db.by_col(indep))
     xsar = np.matrix(xsar).T
     # Check for missing values.
-    if(np.count_nonzero(np.isnan(xsar)) > 0):
+    if np.count_nonzero(np.isnan(xsar)) > 0:
         raise Exception("NAs in independent variable(s)")
 
     # Ensure data and spatial weights have the same dimensions.
-    if(xsar.shape[0] != S.shape[0]):
+    if xsar.shape[0] != S.shape[0]:
         raise Exception(
             "Input data and neighbourhood list have different dimensions")
 
@@ -240,7 +240,7 @@ def spatialfiltering(
     d = np.real(d[:, sortid])
 
     # If not using spatial lag variables, just use independent variables
-    if(spatial_lag_vars is None or len(spatial_lag_vars) == 0):
+    if spatial_lag_vars is None or len(spatial_lag_vars) == 0:
         X = xsar
     else:
         # If using lagged variables, add them in now.
@@ -251,7 +251,7 @@ def spatialfiltering(
     y.shape = (y.shape[0], 1)
     coll_test = pysal.spreg.OLS(np.array(y), np.array(X[:, 1:]))
     # Check for collinearity.
-    if(np.count_nonzero(np.isnan(coll_test.betas)) > 0):
+    if np.count_nonzero(np.isnan(coll_test.betas)) > 0:
         raise Exception("Collinear RHS variable detected")
 
     # Total sum of squares for R2
@@ -303,21 +303,21 @@ def spatialfiltering(
     # if MI is negative, then acsign = -1
     res = y - X*LA.solve((np.transpose(X) * X), (np.transpose(X) * y))
     acsign = 1
-    if(((np.transpose(res) * S) * res) / (np.transpose(res) * res) < 0):
+    if ((np.transpose(res) * S) * res) / (np.transpose(res) * res) < 0:
         acsign = -1
 
     # If only sar model is applied or just the intercept,
     # Compute and save coefficients for all eigenvectors
     onlysar = False
     # if (missing(xlag) & !missing(xsar))
-    if(spatial_lag_vars is None or len(spatial_lag_vars) == 0):
+    if spatial_lag_vars is None or len(spatial_lag_vars) == 0:
         onlysar = True
         Xcoeffs = LA.solve((np.transpose(X) * X), (np.transpose(X) * y))
         gamma4eigenvec = np.vstack((np.r_[1:nofreg + 1], np.zeros(nofreg))).T
     # Only SAR the first parameter estimation for all eigenvectors
     # Due to orthogonality each coefficient can be estimate individually
         for j in range(0, nofreg):
-            if (sel[j, 2] == acsign):  # Use only feasible unselected evecs
+            if sel[j, 2] == acsign:  # Use only feasible unselected evecs
                 gamma4eigenvec[j, 1] = LA.solve(
                     np.transpose(d[:, j]) * d[:, j], np.transpose(d[:, j]) * y)
 
@@ -330,7 +330,7 @@ def spatialfiltering(
         z = float("inf")
         idx = -1
         for j in range(0, nofreg):  # Inner Loop - Find next eigenvector
-            if(sel[j, 2] == acsign):  # Use only feasible unselected evecs
+            if sel[j, 2] == acsign:  # Use only feasible unselected evecs
                 xe = np.hstack((X, d[:, j]))  # Add test eigenvector
                 # Based on whether it is an only SAR model or not
                 if onlysar:
@@ -351,13 +351,13 @@ def spatialfiltering(
                     E, V = _getmoranstat(MSM, degfree)
 
                 # Identify min z(Moran)
-                if(abs((mi - E) / math.sqrt(V)) < z):
+                if abs((mi - E) / math.sqrt(V)) < z:
                     MinMi = mi
                     z = (MinMi - E) / math.sqrt(V)
                     idx = j + 1
 
         # Update design matrix permanently by selected eigenvector
-        if(idx > 0):
+        if idx > 0:
             X = np.hstack((X, d[:, idx - 1]))
             if onlysar:
                 Xcoeffs = np.vstack((Xcoeffs, gamma4eigenvec[idx - 1, 1]))
@@ -381,9 +381,9 @@ def spatialfiltering(
             Aout = np.vstack((Aout, out))
             sel[idx - 1, 2] = 0
             if not alpha:
-                if(abs(ZMinMi) < tolerance):
+                if abs(ZMinMi) < tolerance:
                     break
-                elif(abs(ZMinMi) > abs(oldZMinMi)):
+                elif abs(ZMinMi) > abs(oldZMinMi):
                     if not exact_EV:
                         out = "An inversion has been detected. The procedure "
                         out += "will terminate now.\nIt is suggested to use "
@@ -392,11 +392,11 @@ def spatialfiltering(
                         print out
                     break
             else:
-                if(_altfunction(ZMinMi, alternative) >= alpha):
+                if _altfunction(ZMinMi, alternative) >= alpha:
                     break
 
             if not exact_EV:
-                if (abs(ZMinMi) > abs(oldZMinMi)):
+                if abs(ZMinMi) > abs(oldZMinMi):
                     out = "An inversion has been detected. The procedure "
                     out += "will terminate now.\nIt is suggested to use "
                     out += "the exact expectation and variance of Moran's "

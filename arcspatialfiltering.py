@@ -3,14 +3,15 @@ This module provides an interface for ArcGIS to call the Eigenvector
 Spatial Filtering function, spatialfiltering().
 """
 
-__author__ = "Bryan Chastain <chastain@utdallas.edu>"
-
+import os
 import time
 
 import arcpy
 import numpy as np
 
 import spatialfiltering
+
+__author__ = "Bryan Chastain <chastain@utdallas.edu>"
 
 # Get parameters from ArcGIS tool
 data = arcpy.GetParameterAsText(0)
@@ -68,6 +69,10 @@ else:
 
 alternative = arcpy.GetParameterAsText(12)
 
+out_table = arcpy.GetParameterAsText(13)
+
+out_lyr = arcpy.GetParameterAsText(14)
+
 descDB = arcpy.Describe(data)
 descNB = arcpy.Describe(neighbor_list)
 
@@ -117,7 +122,19 @@ try:
     # Assembled a structured array with eigenvectors and dtype.
     array = np.rec.fromrecords(selVec.tolist(), dtype=dts)
     # Append the selected vectors to the input table.
-    arcpy.da.ExtendTable(orig_data,descDB.OIDFieldName,array,"ID")
+    arcpy.da.NumPyArrayToTable(array, out_table)
+
+    # If the user has opted to make a feature layer, continue
+    if out_lyr != "":
+        tbase = os.path.basename(out_table)
+        # Make a new feature layer based on input data
+        arcpy.MakeFeatureLayer_management(orig_data, tbase)
+        # Join eigenvector table to features.
+        arcpy.AddJoin_management(
+            tbase, descDB.OIDFieldName,
+            out_table, "ID")
+        arcpy.SaveToLayerFile_management(tbase, out_lyr)
+
 except Exception as e:
     arcpy.AddError(e.message)
 arcpy.AddMessage("--- %s seconds ---" % (time.time() - start_time))
