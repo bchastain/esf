@@ -33,7 +33,15 @@ else:
 
 neighbor_list = arcpy.GetParameterAsText(4)
 
-style = arcpy.GetParameterAsText(5)
+style = "d"
+if arcpy.GetParameterAsText(5) == "Row-standardized":
+	style = "r"
+elif arcpy.GetParameterAsText(5) == "Double standardized":
+	style = "d"
+elif arcpy.GetParameterAsText(5) == "Binary":
+	style = "b"
+elif arcpy.GetParameterAsText(5) == "Variance-stabilized":
+	style = "v"
 
 zero_policy = arcpy.GetParameterAsText(6)
 if zero_policy == "true":
